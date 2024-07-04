@@ -1,4 +1,5 @@
 # ParticleFilter
+tldr; see main.m
 
 ## prediction function:
 any function satisfying:
