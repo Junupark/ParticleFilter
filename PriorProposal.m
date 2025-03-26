@@ -1,4 +1,4 @@
-function [next_state, p_draw] = PriorProposal(state, f, z, opt)
+function [next_state, info] = PriorProposal(state, f, z, opt)
     % f(x_[k-1])
     arguments
         state
@@ -10,5 +10,5 @@ function [next_state, p_draw] = PriorProposal(state, f, z, opt)
     draw = mvnrnd(zeros(size(state)), opt.Q);
     
     next_state = f(state) + draw;
-    p_draw = mvnpdf(draw, zeros(size(state)), opt.Q);
+    info.p_draw = mvnpdf(draw, zeros(size(state)), opt.Q);
 end
