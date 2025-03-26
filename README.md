@@ -72,7 +72,7 @@ pf.Predict('TransitionFcn', Ffcn_Kitagawa);
 % option3: pass general sampler = importance sampling & weighting
 z = rand();
 Ffcn_Kitagawa = @(x)Kitagawa_process(x, i_sim); % baseline
-sampler = @(PF, idx)PriorProposal(PF.particles(:,idx), Ffcn_Kitagawa, z);
+sampler = @(PF, idx)PriorProposal(PF.particles(:,idx), Ffcn_Kitagawa, z, 'Q', 1);
 pf.Predict('TransitionFcn', Ffcn_Kitagawa, 'ProposalSampler', sampler);
 % this example (prior proposal) is practically & statistically the same as option2, as the name suggests
 ```
