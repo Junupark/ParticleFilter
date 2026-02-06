@@ -43,62 +43,6 @@ run(fullfile(pwd, 'demo', 'RunParticleFilterDemo.m'))
 runtests
 ```
 
-## Citation
-
-If this repository contributes to your research, please cite relevant publications below.
-
-Journal Articles:
-
-```bibtex
-@article{Park2025ContoursSeeking,
-  title={Contours-Seeking Proposal Density Particle Filter and Resilient Terrain-Referenced Navigation},
-  author={Park, Junwoo and Bang, Hyochoong},
-  year={2025},
-  journal={IEEE Transactions on Aerospace and Electronic Systems},
-  volume={61},
-  number={6},
-  pages={15627--15641},
-  doi={10.1109/TAES.2025.3588823}
-}
-
-@article{Park2024Sparse,
-  title={Sparse Instantiation of Bias Nodes for Factor Graph-based Terrain-referenced Navigation},
-  author={Park, Junwoo and Bang, Hyochoong},
-  journal={International Journal of Control, Automation and Systems},
-  year={2024},
-  volume={22},
-  number={11},
-  pages={3364--3376},
-  doi={10.1007/s12555-023-0784-x}
-}
-```
-
-Conference Papers:
-
-```bibtex
-@inproceedings{park2022balanced,
-  title={Balanced cooperative target search of mobile sensor fleet under localization uncertainty},
-  author={Park, Junwoo and Lee, Ho-Hyeong and Bang, Hyochoong},
-  booktitle={2022 IEEE 61st Conference on Decision and Control (CDC)},
-  pages={6626--6631},
-  year={2022},
-  organization={IEEE},
-  address={Cancun, Mexico},
-  doi={10.1109/CDC51059.2022.9992977}
-}
-
-@inproceedings{park2022evenly,
-  title={Evenly weighted particle filter for terrain-referenced navigation using gaussian mixture proposal distribution},
-  author={Park, Junwoo and Bang, Hyochoong},
-  booktitle={2022 International Conference on Unmanned Aircraft Systems (ICUAS)},
-  pages={177--183},
-  year={2022},
-  organization={IEEE},
-  address={Dubrovnik, Croatia},
-  doi={10.1109/ICUAS54217.2022.9836197}
-}
-```
-
 ## Core Configuration and Methods
 
 `ParticleFilter` constructor supports:
@@ -197,4 +141,60 @@ In MATLAB (from `MyApp`):
 ```matlab
 addpath(fullfile(pwd, 'ParticleFilter'))
 % construct and use ParticleFilter directly from your app entrypoint
+```
+
+## Citation
+
+If this repository contributes to your research, please cite relevant publications below.
+
+Journal Articles:
+
+```bibtex
+@article{Park2025ContoursSeeking,
+  title={Contours-Seeking Proposal Density Particle Filter and Resilient Terrain-Referenced Navigation},
+  author={Park, Junwoo and Bang, Hyochoong},
+  year={2025},
+  journal={IEEE Transactions on Aerospace and Electronic Systems},
+  volume={61},
+  number={6},
+  pages={15627--15641},
+  doi={10.1109/TAES.2025.3588823}
+}
+
+@article{Park2024Sparse,
+  title={Sparse Instantiation of Bias Nodes for Factor Graph-based Terrain-referenced Navigation},
+  author={Park, Junwoo and Bang, Hyochoong},
+  journal={International Journal of Control, Automation and Systems},
+  year={2024},
+  volume={22},
+  number={11},
+  pages={3364--3376},
+  doi={10.1007/s12555-023-0784-x}
+}
+```
+
+Conference Papers:
+
+```bibtex
+@inproceedings{park2022balanced,
+  title={Balanced cooperative target search of mobile sensor fleet under localization uncertainty},
+  author={Park, Junwoo and Lee, Ho-Hyeong and Bang, Hyochoong},
+  booktitle={2022 IEEE 61st Conference on Decision and Control (CDC)},
+  pages={6626--6631},
+  year={2022},
+  organization={IEEE},
+  address={Cancun, Mexico},
+  doi={10.1109/CDC51059.2022.9992977}
+}
+
+@inproceedings{park2022evenly,
+  title={Evenly weighted particle filter for terrain-referenced navigation using gaussian mixture proposal distribution},
+  author={Park, Junwoo and Bang, Hyochoong},
+  booktitle={2022 International Conference on Unmanned Aircraft Systems (ICUAS)},
+  pages={177--183},
+  year={2022},
+  organization={IEEE},
+  address={Dubrovnik, Croatia},
+  doi={10.1109/ICUAS54217.2022.9836197}
+}
 ```
