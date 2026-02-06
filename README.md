@@ -1,12 +1,10 @@
 # ParticleFilter
 
-A MATLAB implementation of modular Particle Filter
+A self-contained MATLAB implementation of particle filter for general nonlinear and non-Gaussian state estimation.
 
-## Quick Start
+## Quick Start (Standalone)
 
-See [main.m](./main.m) for a complete example.
-
-```MATLAB
+```matlab
 % number of particles
 N = 1000;
 % Create particle filter with Gaussian initial distribution
@@ -28,25 +26,55 @@ pf.UpdateMeasurement(measurement);
 
 % Resample adaptively
 pf.Resample('ratioNeff', 0.7);
+
+% Exploit result
+[xhat, Phat] = pf.MMSE();
 ```
 
-## Related Work
+**Run demonstration** (see [demo](./demo/RunParticleFilterDemo.m) for comprehensive examples):
 
-**This implementation has been used in the following research. If this package contributes to your work, you may find these papers relevant:**
+```matlab
+run(fullfile(pwd, 'demo', 'RunParticleFilterDemo.m'))
+```
 
-**Journal Articles:**
+**Run tests:**
+
+```matlab
+runtests
+```
+
+## Citation
+
+If this repository contributes to your research, please cite relevant publications below.
+
+Journal Articles:
+
 ```bibtex
-@article{park2025contours,
-  title={Contours-seeking Proposal Density Particle Filter and Resilient Terrain-referenced Navigation},
+@article{Park2025ContoursSeeking,
+  title={Contours-Seeking Proposal Density Particle Filter and Resilient Terrain-Referenced Navigation},
   author={Park, Junwoo and Bang, Hyochoong},
-  journal={IEEE Transactions on Aerospace and Electronic Systems},
   year={2025},
-  doi={10.1109/TAES.2025.3588823},
-  note={in press}
+  journal={IEEE Transactions on Aerospace and Electronic Systems},
+  volume={61},
+  number={6},
+  pages={15627--15641},
+  doi={10.1109/TAES.2025.3588823}
+}
+
+@article{Park2024Sparse,
+  title={Sparse Instantiation of Bias Nodes for Factor Graph-based Terrain-referenced Navigation},
+  author={Park, Junwoo and Bang, Hyochoong},
+  journal={International Journal of Control, Automation and Systems},
+  year={2024},
+  volume={22},
+  number={11},
+  pages={3364--3376},
+  doi={10.1007/s12555-023-0784-x}
 }
 ```
 
-**Conference Papers:**
+Conference Papers:
+
 ```bibtex
 @inproceedings{park2022balanced,
   title={Balanced cooperative target search of mobile sensor fleet under localization uncertainty},
@@ -71,97 +99,102 @@ pf.Resample('ratioNeff', 0.7);
 }
 ```
 
-## Core Components
+## Core Configuration and Methods
 
-### ParticleFilter Class
-**Required inputs:**
-- `Np`: Number of particles (integer > 10)
-- `TransitionFcn`: State transition function `@(x_{k}) -> x_{k+1}`
-- `MeasurementFcn`: Measurement function `@(x_{k}) -> z_{k}`
-- `Likelihood`: Likelihood function `@(PF, z, index) -> p(z_{k} | x_{k}^{index})`
-- `dimX`: Dimension of state vector (positive integer)
-- `dimZ`: Dimension of measurement vector (positive integer)
-- `ProcessNoise`: Process noise covariance (Gaussian)
-- `opt`: Options struct containing initialization parameters
+`ParticleFilter` constructor supports:
 
-**Initialization options (in opt struct):**
-- `x0`, `P0`: Initial estimate and covariance (required unless x0_exhaustive is provided)
-- `x0_exhaustive`: Initial particle population (dimX × Np)
-- `weights`: Initial particle weights (optional, default: uniform)
-- `name`: String name for the filter instance (optional)
+- `Np`: number of particles.
+- `TransitionFcn`: state transition function handle.
+- `MeasurementFcn`: measurement function handle.
+- `Likelihood`: likelihood function handle.
+- `dimX`, `dimZ`: state and measurement dimensions.
+- `ProcessNoise`: process noise covariance.
+- `x0`, `P0`: Gaussian initial state and covariance.
+- `x0_exhaustive`: user-supplied initial particle matrix (`dimX x Np`).
+- `weights`: optional initial normalized weights.
+- `name`: optional filter instance name.
 
-### Key Methods
+### Predict
 
-#### Prediction:
-```MATLAB
-pf.Predict();  % Using default transition function
-pf.Predict('TransitionFcn', custom_fcn);  % Custom transition
-pf.Predict('ProposalSampler', sampler);  % Importance sampling with custom proposal
+```matlab
+% default propagation with PF transition model
+pf.Predict();
+
+% override transition model for this step
+pf.Predict('TransitionFcn', custom_transition_fcn);
 ```
 
-**Custom Proposal Samplers:**
-The `ProposalSampler` enables advanced particle filtering techniques by allowing custom sampling strategies:
+With proposal sampling:
 
-```MATLAB
-% Example: Prior proposal (equivalent to standard prediction)
-sampler = @(PF, idx) PriorProposal(PF.particles(:,idx), transition_fcn, measurement, 'Q', process_noise);
-pf.Predict('ProposalSampler', sampler);
-
-% Custom sampler function signature: @(PF, index) -> [next_state, info]
-% - PF: ParticleFilter instance
-% - index: particle index being sampled
-% - next_state: predicted state (size: state_dim × 1)
-% - info.p_draw: proposal probability q(x_{k+1} | x_{k}, z_{k})
+```matlab
+% built-in prior proposal (does not require z)
+pf.Predict('ProposalSampler', @PriorProposal);
 ```
 
-**Applications:**
-- **Optimal proposals** leveraging current measurement `z_{k}`
-- **Auxiliary Particle Filter (APF)**, or **Regularized Particle Filter (RPF)**
-- **Custom non-Gaussian samplers** for specialized dynamics
+Custom proposal samplers must return:
 
-#### Measurement Update:
-```MATLAB
-pf.UpdateMeasurement(z);  % Using default likelihood
-pf.UpdateMeasurement(z, 'Likelihood', custom_likelihood);
+- `next_state`: proposed state for particle `idx`
+- `info.p_draw`: proposal density q(x*{k} | x*{k-1}, z\_{k})
+- `info.idx_sampledfrom`: ancestor particle index
+
+### Measurement Update
+
+```matlab
+% default likelihood (set in constructor)
+[diverged, varianceW, entropyW, c] = pf.UpdateMeasurement(z);
+
+% override likelihood for one update
+[diverged, varianceW, entropyW, c] = pf.UpdateMeasurement(z, 'Likelihood', custom_likelihood_fcn);
 ```
 
-**Custom Likelihood Functions:**
-The likelihood function is completely flexible and does not need to be Gaussian:
+Likelihood signature:
 
-```MATLAB
-% Likelihood function signature: @(PF, z, index) -> p(z | x^{index})
-% - PF: ParticleFilter instance containing particles
-% - z: current measurement vector
-% - index: particle index to evaluate likelihood for
-
-% Gaussian likelihood (common case) - using custom measurement function
-l_gaussian = @(PF, z, idx) mvnpdf(z - custom_meas_fcn(PF.particles(:,idx)), R);
-
-% Non-Gaussian examples:
-% Laplace distribution for robust estimation
-l_laplace = @(PF, z, idx) prod(exp(-abs(z - PF.Hfcn(PF.particles(:,idx)))/sigma));
-
-% Gaussian mixture for multimodality - using custom measurement function
-l_gmm = @(PF, z, idx) w1*mvnpdf(z, custom_meas_fcn1(PF.particles(:,idx)), R1) + ...
-                      w2*mvnpdf(z, custom_meas_fcn2(PF.particles(:,idx)), R2);
+```matlab
+custom_likelihood_fcn = @(PF, z, idx) p_z_given_x;
 ```
 
-**Applications:**
-- **Robust estimation** with heavy-tailed distributions (Laplace, Student-t)
-- **Terrain-referenced navigation** with custom terrain models
-- **Multi-modal measurements** using mixture distributions
-- **Outlier rejection** with custom robust likelihoods
+### Resample
 
-#### Resampling:
-**Supported Methods**: systematic, stratified, multinomial, and residual
-```MATLAB
-pf.Resample('method', 'systematic');
-pf.Resample('ratioNeff', 0.7);  % Adaptive resampling
+```matlab
+% supported methods: systematic, stratified, multinomial, residual
+[ess, did_resample] = pf.Resample('method', 'systematic', 'ratioNeff', 0.7);
 ```
 
-#### Statistics:
-```MATLAB
-[mean, cov] = pf.MMSE();  % Mean and covariance
-expectation = pf.Expectation('of', @(x) x.^2);  % Custom expectation
-[particles, weights, N] = pf.GetEnsemble();  % Raw particles
+### Statistics and Ensemble Access
+
+```matlab
+% posterior mean/covariance
+[xhat, Phat] = pf.MMSE();
+
+% generic expectation E[f(x)]
+E = pf.Expectation('of', @(x) x.^2);
+
+% raw particles/weights
+[P, W, N] = pf.GetEnsemble();
+```
+
+## Submodule Use (Recommended)
+
+This repository is intended to be consumed as a submodule inside a parent application.
+
+Assume parent project layout:
+
+```text
+MyApp/
+  your_app/
+  ParticleFilter/   % this repository as submodule
+```
+
+From `MyApp`:
+
+```bash
+git submodule add https://github.com/Junupark/ParticleFilter.git
+git submodule update --init --recursive
+```
+
+In MATLAB (from `MyApp`):
+
+```matlab
+addpath(fullfile(pwd, 'ParticleFilter'))
+% construct and use ParticleFilter directly from your app entrypoint
 ```

@@ -1,4 +1,4 @@
-function sim = SimulationSetup(opt)
+function sim = DemoSimulationSetup(opt)
     arguments
         opt.n_particles {mustBePositive, mustBeInteger} = 500
         opt.r_Kitagawa {mustBePositive} = 0.1;
@@ -24,7 +24,8 @@ function sim = SimulationSetup(opt)
         
         opt.ratioNeff {mustBeInRange(opt.ratioNeff, 0, 1, 'exclusive')} = 0.7;
     end
-    addpath("./TestProcesses/");
+    this_dir = fileparts(mfilename('fullpath'));
+    addpath(fullfile(this_dir, 'processes'));
     sim.len = opt.tf / opt.delta_t;
     assert(sim.len == round(sim.len), 'Wrong delta_t & tf');
     
