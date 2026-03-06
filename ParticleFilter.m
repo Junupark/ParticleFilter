@@ -179,7 +179,7 @@ classdef ParticleFilter < handle
             end
             
             for i=1:self.Np
-                self.weights(i) = self.weights(i) * opt.Likelihood(self, z, i);
+                self.weights(i) = self.weights(i) * opt.Likelihood(z, self.particles(:,i));
             end
             
             diverged = sum(self.weights) < opt.divergence_threshold;
@@ -250,6 +250,7 @@ classdef ParticleFilter < handle
                 opt.ratioNeff double ...
                     {mustBeInRange(opt.ratioNeff, 0, 1, 'inclusive')} = 1
                 opt.rougheningQ double = zeros(self.dimX)
+                opt.regularize logical = false
                 opt.dr_charging_criteria char {mustBeMember(opt.dr_charging_criteria, {'mean','median','sum_half'})} = 'mean'
                 opt.dr_charging_formula char {mustBeMember(opt.dr_charging_formula, {'prop','inv_m_log', 'exp', 'inv', 'm_log'})} = 'prop'
                 opt.dr_kernel (1,:) char {mustBeMember(opt.dr_kernel, {'uniform', 'triangular', 'epanechnikov', 'normal'})} = 'epanechnikov'
@@ -268,11 +269,10 @@ classdef ParticleFilter < handle
                 return;
             end
             
-            % Pre-resample processes for particular PFs
-            regularized = contains(self.name, 'regularized', 'IgnoreCase', true);
-            if regularized
-                self.MMSE(); % to ensure we have updated (empirical) covariance
-                D = chol(self.covariance + 1e-17*eye(2), 'lower'); % to ensure the positive definite (not semi-) ness
+            % Pre-resample: compute Cholesky for kernel regularization
+            if opt.regularize
+                self.MMSE();
+                D = chol(self.covariance + 1e-17*eye(self.dimX), 'lower');
             end
 
             % Resample accordingly
@@ -299,9 +299,9 @@ classdef ParticleFilter < handle
                     error('not supported');
             end
 
-            % Post-resample processes for particular PFs
-            if regularized % using Gaussian kernel
-                p = 1/self.dimX+4;
+            % Post-resample: kernel regularization (Gaussian kernel)
+            if opt.regularize
+                p = 1/(self.dimX+4);
                 A = (4/(self.dimX+2))^p;
                 h = A*(self.Np^(-p));
                 self.particles = self.particles + h*D*randn(self.dimX,self.Np);
